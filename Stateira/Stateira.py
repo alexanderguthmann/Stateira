@@ -62,6 +62,31 @@ scattering_config = {
 "boundary_conditions":0
 }
 
+bound_config = {
+"type":"single",
+"e_range_low":-1490,
+"e_range_high":-1480,
+"num_nodes":1,
+"debug_mode":"false",
+"num_chan":5,
+"r_start":2.0,
+"r_stop":3.6,
+"r_mid":2.5,
+"stats_step":1,
+"num_cheb":16,
+"tolerance":1.0E-7,
+"energy_tolerance":1.0E-05,
+"node_count_points":100,
+"trace_points":1000,
+"force_tolerance":"true",
+"max_loops":30,
+"e_in":-4961.150655306845,
+"output_file":"examples\\LiLi_bound\\out\\out_s.h5",
+"pot_config_file":"examples\\LiLi_bound\\lilipot_conf.config",
+"v_infty_r":1.0E10,
+"save_wavefunction":"true",
+"max_step":10.0    
+}
 
 """
 Writes siem config file
@@ -80,3 +105,15 @@ def run_siem(show_output):
         os.system('start /wait cmd /c "set HDF5_DISABLE_VERSION_CHECK=2 && cd ' + conf.working_dir + ' && ' + conf.sp + 'SIEM.exe siem.config"')
 
     
+def write_conf_bound():
+    bound_config["e_in"] = conf.E_tot
+    bound_config["num_chan"] = conf.num_channels
+    with open(str(conf.working_dir) + '\\siem_bound.config','w') as fout:
+        for key in bound_config:
+            fout.write(key + "=" + str(bound_config[key]) + "\n")
+            
+def run_siem_bound(show_output):
+    if show_output == True:
+        os.system('start /wait cmd /c "set HDF5_DISABLE_VERSION_CHECK=2 && cd ' + conf.working_dir + ' && ' + conf.sp + 'SIEM_BOUND.exe siem_bound.config"')
+    else:
+        os.system('start /wait cmd /c "set HDF5_DISABLE_VERSION_CHECK=2 && cd ' + conf.working_dir + ' && ' + conf.sp + 'SIEM_BOUND.exe siem_bound.config"')
