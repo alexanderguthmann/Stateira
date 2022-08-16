@@ -41,8 +41,8 @@ class bound_wf:
         rvecArrayObject = f.get_node("/WF_"+str(level_ind)+"/", "R_VEC")
         levelsArrayObject = f.get_node("/", "LEVELS")
 
-        config_arr = configArrayObject.read()
-        levels_arr = levelsArrayObject.read()
+        self.config_arr = configArrayObject.read()
+        self.levels_arr = levelsArrayObject.read()
         self.alpha_in = alphaInArrayObject.read()
         self.alpha_out = alphaOutArrayObject.read()
         self.bl = blArrayObject.read()
@@ -50,14 +50,15 @@ class bound_wf:
         self.l_vec = lvecArrayObject.read()
         self.r_vec = rvecArrayObject.read()
 
-        self.NC = int(config_arr[0])
-        self.NP1 = int(config_arr[1])
-        self.R_START = config_arr[2]
-        self.R_STOP = config_arr[3]
+        self.NC = int(self.config_arr[0])
+        self.NP1 = int(self.config_arr[1])
+        self.R_START = self.config_arr[2]
+        self.R_STOP = self.config_arr[3]
         
         self.NUM_PART = int(self.config_wf[5])
         self.R_MID = int(self.config_wf[4])
-        self.e_val = levels_arr[level_ind]
+        self.e_val = self.levels_arr[level_ind]
+        self.norm = -1
 
         f.close()
     
@@ -90,6 +91,47 @@ class bound_wf:
             
         return psi_arr
     
+    def get_psi_norm(self):
+        num_points = 600
+        r_arr = np.linspace(self.R_START, self.R_STOP, num_points)
+        psi_arr = self.get_psi_array(r_arr)
+        delta_r = (self.R_STOP - self.R_START) / num_points
+        s = 0
+        for i in range(self.NC):
+            s = s + np.sum(np.abs(psi_arr[:,i])**2)
+        s = s * delta_r
+        self.norm = s
+        
+        return s
+    
+    def get_psi_range(self):
+        
+        if self.norm < 0:
+            self.get_psi_norm()
+            
+        num_points = 600
+        r_arr = np.linspace(self.R_START, self.R_STOP, num_points)
+        psi_arr = self.get_psi_array(r_arr)
+        delta_r = (self.R_STOP - self.R_START) / num_points
+        abs_sq = np.full((num_points),0.0)
+        for i in range(self.NC):
+            abs_sq = abs_sq + np.abs(psi_arr[:,i])**2
+        abs_sq = abs_sq / self.norm * delta_r
+        
+        s0 = 0
+        for i in range(num_points):
+            s1 = s0 + abs_sq[i]
+            
+            if s1 > 0.001 and s0 <= 0.001:
+                r_low = r_arr[i]
+                
+            if s1 > 0.999 and s0 <= 0.999:
+                r_high = r_arr[i]
+                
+            s0 = s1
+        
+        return r_low, r_high
+        
 class bound:
     def __init__(self, file_name):
         self.file_name = file_name
@@ -104,4 +146,4 @@ class bound:
         
         self.NC = int(self.config_arr[0])
         
-        
+        f.close()
