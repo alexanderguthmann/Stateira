@@ -39,6 +39,7 @@ class scat:
         
         xmatArrayObject = f.get_node("/", "XMAT")
         kmatArrayObject = f.get_node("/", "KMAT")
+        larrArrayObject = f.get_node("/", "L_ARR")
         posindArrayObject = f.get_node("/", "POS_IND")
         
         kvecArrayObject = f.get_node("/", "KVEC")
@@ -53,6 +54,7 @@ class scat:
         
         
         self.kmat = kmatArrayObject.read()
+        self.l_arr = larrArrayObject.read()
         self.xmat = xmatArrayObject.read()
         self.pos_ind = posindArrayObject.read()
         
@@ -77,7 +79,15 @@ class scat:
     def get_scattering_length(self, in_chan, out_chan):
         k = self.kvec_arr[self.pos_ind[in_chan]]
         smat = self.get_smat()
-        a = 1.0 /(1.0j * k) * (1-smat[in_chan, out_chan])/(1+smat[in_chan, out_chan])
+        l_num = self.l_arr[self.pos_ind[in_chan]]
+        if l_num == 0:
+            n_fac = 1
+        elif l_num == 1:
+            n_fac = 3
+        else:
+            n_fac = 4
+        #n_fac = 2
+        a = 1.0 /(1.0j * k**n_fac) * (1-smat[in_chan, out_chan])/(1+smat[in_chan, out_chan])
         a = a * conf.r_scaling
         return a
     
